@@ -8,6 +8,9 @@ import com.wanderlust.exception.ResourceNotFoundException;
 import com.wanderlust.repository.PropertyRepository;
 import com.wanderlust.repository.UserRepository;
 import org.springframework.stereotype.Service;
+import com.wanderlust.exception.ResourceNotFoundException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.util.List;
 
@@ -25,11 +28,7 @@ public class PropertyService {
 
     public PropertyResponse createProperty(PropertyRequest request) {
 
-        User owner = userRepository.findById(request.getOwnerId())
-                .orElseThrow(() ->
-                        new ResourceNotFoundException(
-                                "Owner not found with id: " + request.getOwnerId()
-                        ));
+    	 User owner = getCurrentUser();
 
         Property property = new Property();
 
@@ -109,5 +108,21 @@ public class PropertyService {
                 property.getMaxGuests(),
                 property.getOwner().getId()
         );
+    }
+    
+    private User getCurrentUser() {
+
+        Authentication authentication =
+                SecurityContextHolder
+                        .getContext()
+                        .getAuthentication();
+
+        String email = authentication.getName();
+
+        return userRepository.findByEmail(email)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "Authenticated user not found"
+                        ));
     }
 }
