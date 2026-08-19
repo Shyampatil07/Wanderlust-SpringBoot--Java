@@ -9,14 +9,25 @@ import org.springframework.security.web.SecurityFilterChain;
 public class SecurityConfig {
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http)
-            throws Exception {
+    public SecurityFilterChain securityFilterChain(
+            HttpSecurity http) throws Exception {
 
         http
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/**").permitAll()
-                .anyRequest().authenticated()
+
+                // Public authentication endpoints
+                .requestMatchers(
+                        "/api/auth/register",
+                        "/api/auth/login"
+                ).permitAll()
+
+                // Temporary: property APIs
+                .requestMatchers("/api/properties/**")
+                .permitAll()
+
+                .anyRequest()
+                .authenticated()
             );
 
         return http.build();
