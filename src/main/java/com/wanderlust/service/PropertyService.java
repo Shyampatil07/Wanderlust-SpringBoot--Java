@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import com.wanderlust.exception.ResourceNotFoundException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.access.AccessDeniedException;
 
 import java.util.List;
 
@@ -73,6 +74,21 @@ public class PropertyService {
                                 "Property not found with id: " + id
                         ));
 
+        User currentUser = getCurrentUser();
+
+        // Admin can update any property
+        if (!isAdmin(currentUser)) {
+
+            // Normal user can update only their own property
+            if (!property.getOwner().getId()
+                    .equals(currentUser.getId())) {
+
+                throw new AccessDeniedException(
+                        "You are not allowed to update this property"
+                );
+            }
+        }
+
         property.setTitle(request.getTitle());
         property.setDescription(request.getDescription());
         property.setLocation(request.getLocation());
@@ -87,13 +103,28 @@ public class PropertyService {
 
     public void deleteProperty(Long id) {
 
-        if (!propertyRepository.existsById(id)) {
-            throw new ResourceNotFoundException(
-                    "Property not found with id: " + id
-            );
+        Property property = propertyRepository.findById(id)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "Property not found with id: " + id
+                        ));
+
+        User currentUser = getCurrentUser();
+
+        // Admin can delete any property
+        if (!isAdmin(currentUser)) {
+
+            // User can delete only their own property
+            if (!property.getOwner().getId()
+                    .equals(currentUser.getId())) {
+
+                throw new AccessDeniedException(
+                        "You are not allowed to delete this property"
+                );
+            }
         }
 
-        propertyRepository.deleteById(id);
+        propertyRepository.delete(property);
     }
 
     private PropertyResponse convertToResponse(Property property) {
@@ -124,5 +155,11 @@ public class PropertyService {
                         new ResourceNotFoundException(
                                 "Authenticated user not found"
                         ));
+    }
+    
+    private boolean isAdmin(User user) {
+
+        return user.getRole() != null
+                && user.getRole().name().equals("ADMIN");
     }
 }

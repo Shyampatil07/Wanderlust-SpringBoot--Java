@@ -70,6 +70,11 @@ public class SecurityConfig {
                         HttpMethod.DELETE,
                         "/api/properties/**"
                 ).authenticated()
+                
+                .requestMatchers(
+                        HttpMethod.POST,
+                        "/api/bookings"
+                ).authenticated()
 
                 // Everything else requires authentication
                 .anyRequest().authenticated()
