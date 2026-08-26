@@ -57,6 +57,12 @@ public class SecurityConfig {
                         HttpMethod.POST,
                         "/api/properties/*/reviews"
                 ).authenticated()
+                
+                //update review requires login
+                .requestMatchers(
+                        HttpMethod.PUT,
+                        "/api/properties/*/reviews/*"
+                ).authenticated()
 
                 // Anyone can view properties
                 .requestMatchers(
