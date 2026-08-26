@@ -9,7 +9,6 @@ import org.springframework.http.HttpMethod;
 
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
-
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
@@ -18,49 +17,59 @@ public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
-    public SecurityConfig(
-            JwtAuthenticationFilter jwtAuthenticationFilter) {
-
-        this.jwtAuthenticationFilter =
-                jwtAuthenticationFilter;
+    public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter) {
+        this.jwtAuthenticationFilter = jwtAuthenticationFilter;
     }
 
     @Bean
-    public SecurityFilterChain securityFilterChain(
-            HttpSecurity http)
+    public SecurityFilterChain securityFilterChain(HttpSecurity http)
             throws Exception {
 
         http
+
+            // 1. Disable CSRF for REST API
             .csrf(csrf -> csrf.disable())
 
-            // JWT = stateless authentication
+            // 2. JWT authentication is stateless
             .sessionManagement(session ->
                     session.sessionCreationPolicy(
                             SessionCreationPolicy.STATELESS
                     )
             )
 
+            // 3. Authorization rules
             .authorizeHttpRequests(auth -> auth
 
-                // Authentication endpoints
+                // Public authentication APIs
                 .requestMatchers(
                         "/api/auth/register",
                         "/api/auth/login"
                 ).permitAll()
+                
+             // Public property reviews
+                .requestMatchers(
+                        HttpMethod.GET,
+                        "/api/properties/*/reviews"
+                ).permitAll()
 
-                // Anyone can browse properties
+                // Creating reviews requires login
+                .requestMatchers(
+                        HttpMethod.POST,
+                        "/api/properties/*/reviews"
+                ).authenticated()
+
+                // Anyone can view properties
                 .requestMatchers(
                         HttpMethod.GET,
                         "/api/properties/**"
                 ).permitAll()
 
-                // Creating a property requires login
+                // Property operations require login
                 .requestMatchers(
                         HttpMethod.POST,
                         "/api/properties"
                 ).authenticated()
 
-                // Updating/deleting requires login
                 .requestMatchers(
                         HttpMethod.PUT,
                         "/api/properties/**"
@@ -70,22 +79,23 @@ public class SecurityConfig {
                         HttpMethod.DELETE,
                         "/api/properties/**"
                 ).authenticated()
-                
+
+             // Booking requires login
                 .requestMatchers(
-                        HttpMethod.POST,
-                        "/api/bookings"
+                        "/api/bookings/**"
                 ).authenticated()
+                
 
                 // Everything else requires authentication
                 .anyRequest().authenticated()
             )
 
-            // Run JWT filter before Spring's username/password filter
+            // 4. Run our JWT filter before Spring's
+            // username/password authentication filter
             .addFilterBefore(
                     jwtAuthenticationFilter,
                     UsernamePasswordAuthenticationFilter.class
             );
-        
 
         return http.build();
     }

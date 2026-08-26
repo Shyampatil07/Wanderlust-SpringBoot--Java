@@ -10,7 +10,7 @@ import java.util.List;
 public interface BookingRepository
         extends JpaRepository<Booking, Long> {
 
-    List<Booking> findByUserId(Long userId);
+    List<Booking> findByUser_Id(Long userId);
 
     List<Booking> findByPropertyIdAndStatusNotAndCheckInLessThanAndCheckOutGreaterThan(
             Long propertyId,
@@ -18,4 +18,12 @@ public interface BookingRepository
             LocalDate checkOut,
             LocalDate checkIn
     );
+    
+    boolean existsByUserIdAndPropertyIdAndStatus(
+            Long userId,
+            Long propertyId,
+            BookingStatus status
+    );
+    
+    
 }
