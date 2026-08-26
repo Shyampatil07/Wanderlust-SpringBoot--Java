@@ -62,7 +62,13 @@ public class SecurityConfig {
                 .requestMatchers(
                         HttpMethod.PUT,
                         "/api/properties/*/reviews/*"
-                ).authenticated()
+                ).authenticated()              
+
+             // Login required to delete
+             .requestMatchers(
+                     HttpMethod.DELETE,
+                     "/api/properties/*/reviews/*"
+             ).authenticated()
 
                 // Anyone can view properties
                 .requestMatchers(
