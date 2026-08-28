@@ -8,11 +8,14 @@ import com.wanderlust.exception.ResourceNotFoundException;
 import com.wanderlust.repository.PropertyRepository;
 import com.wanderlust.repository.UserRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
+
 import com.wanderlust.exception.ResourceNotFoundException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.access.AccessDeniedException;
 
+import java.io.IOException;
 import java.util.List;
 
 @Service
@@ -20,11 +23,65 @@ public class PropertyService {
 
     private final PropertyRepository propertyRepository;
     private final UserRepository userRepository;
+    private final CloudinaryService cloudinaryService;
+    
+    public PropertyService(
+            PropertyRepository propertyRepository,
+            UserRepository userRepository,
+            CloudinaryService cloudinaryService) {
 
-    public PropertyService(PropertyRepository propertyRepository,
-                           UserRepository userRepository) {
         this.propertyRepository = propertyRepository;
         this.userRepository = userRepository;
+        this.cloudinaryService = cloudinaryService;
+    }
+
+    public PropertyResponse uploadPropertyImage(
+            Long propertyId,
+            MultipartFile file) throws IOException {
+
+        Property property =
+                propertyRepository.findById(propertyId)
+                        .orElseThrow(() ->
+                                new ResourceNotFoundException(
+                                        "Property not found with id: "
+                                                + propertyId
+                                ));
+
+        User currentUser = getCurrentUser();
+
+        boolean isAdmin =
+                currentUser.getRole() != null
+                        && currentUser.getRole()
+                        .name()
+                        .equals("ADMIN");
+
+        boolean isOwner =
+                property.getOwner().getId()
+                        .equals(currentUser.getId());
+
+        if (!isOwner && !isAdmin) {
+
+            throw new AccessDeniedException(
+                    "You are not allowed to update this property"
+            );
+        }
+
+        if (file == null || file.isEmpty()) {
+
+            throw new IllegalArgumentException(
+                    "Image file is required"
+            );
+        }
+
+        String imageUrl =
+                cloudinaryService.uploadImage(file);
+
+        property.setImageUrl(imageUrl);
+
+        Property savedProperty =
+                propertyRepository.save(property);
+
+        return convertToResponse(savedProperty);
     }
 
     public PropertyResponse createProperty(PropertyRequest request) {
@@ -137,6 +194,7 @@ public class PropertyService {
                 property.getLocation(),
                 property.getPricePerNight(),
                 property.getMaxGuests(),
+                property.getImageUrl(),
                 property.getOwner().getId()
         );
     }

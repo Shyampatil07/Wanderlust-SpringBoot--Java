@@ -7,7 +7,10 @@ import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.bind.annotation.RequestParam;
 
+import java.io.IOException;
 import java.util.List;
 
 @RestController
@@ -67,4 +70,23 @@ public class PropertyController {
 
         return ResponseEntity.noContent().build();
     }
+    
+    @PostMapping(
+            value = "/{id}/image",
+            consumes = "multipart/form-data"
+    )
+    public ResponseEntity<PropertyResponse> uploadImage(
+            @PathVariable Long id,
+            @RequestParam("file") MultipartFile file)
+            throws IOException {
+
+        PropertyResponse response =
+                propertyService.uploadPropertyImage(
+                        id,
+                        file
+                );
+
+        return ResponseEntity.ok(response);
+    }
+    
 }

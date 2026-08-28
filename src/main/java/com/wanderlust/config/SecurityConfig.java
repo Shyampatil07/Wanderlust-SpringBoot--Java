@@ -81,6 +81,11 @@ public class SecurityConfig {
                         HttpMethod.POST,
                         "/api/properties"
                 ).authenticated()
+                
+                .requestMatchers(
+                        HttpMethod.POST,
+                        "/api/properties/*/image"
+                ).authenticated()
 
                 .requestMatchers(
                         HttpMethod.PUT,

@@ -15,5 +15,6 @@ public class PropertyResponse {
     private String location;
     private Double pricePerNight;
     private Integer maxGuests;
+    private String imageUrl;
     private Long ownerId;
 }
