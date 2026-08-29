@@ -36,11 +36,33 @@ public class PropertyController {
     }
 
     @GetMapping
-    public ResponseEntity<List<PropertyResponse>> getAllProperties() {
+    public ResponseEntity<List<PropertyResponse>> getAllProperties(
 
-        return ResponseEntity.ok(
-                propertyService.getAllProperties()
-        );
+            @RequestParam(required = false)
+            String location,
+
+            @RequestParam(required = false)
+            Double minPrice,
+
+            @RequestParam(required = false)
+            Double maxPrice,
+
+            @RequestParam(required = false)
+            Integer guests,
+
+            @RequestParam(required = false)
+            String sort) {
+
+        List<PropertyResponse> properties =
+                propertyService.getAllProperties(
+                        location,
+                        minPrice,
+                        maxPrice,
+                        guests,
+                        sort
+                );
+
+        return ResponseEntity.ok(properties);
     }
 
     @GetMapping("/{id}")
