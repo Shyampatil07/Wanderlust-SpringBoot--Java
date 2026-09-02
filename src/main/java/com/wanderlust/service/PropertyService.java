@@ -7,12 +7,16 @@ import com.wanderlust.entity.User;
 import com.wanderlust.exception.ResourceNotFoundException;
 import com.wanderlust.repository.PropertyRepository;
 import com.wanderlust.repository.UserRepository;
+import com.wanderlust.specification.PropertySpecification;
+
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.wanderlust.exception.ResourceNotFoundException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.access.AccessDeniedException;
 
 import java.io.IOException;
@@ -102,14 +106,43 @@ public class PropertyService {
         return convertToResponse(savedProperty);
     }
 
-    public List<PropertyResponse> getAllProperties() {
+    public List<PropertyResponse> getAllProperties(
+            String location,
+            Double minPrice,
+            Double maxPrice,
+            Integer guests,
+            String sort) {
 
-        return propertyRepository.findAll()
+        Specification<Property> specification =
+                Specification
+                        .where(PropertySpecification.hasLocation(location))
+                        .and(PropertySpecification.minPrice(minPrice))
+                        .and(PropertySpecification.maxPrice(maxPrice))
+                        .and(PropertySpecification.minGuests(guests));
+
+        Sort sorting = Sort.unsorted();
+
+        if ("priceAsc".equalsIgnoreCase(sort)) {
+
+            sorting = Sort.by(
+                    Sort.Direction.ASC,
+                    "pricePerNight"
+            );
+
+        } else if ("priceDesc".equalsIgnoreCase(sort)) {
+
+            sorting = Sort.by(
+                    Sort.Direction.DESC,
+                    "pricePerNight"
+            );
+        }
+
+        return propertyRepository
+                .findAll(specification, sorting)
                 .stream()
                 .map(this::convertToResponse)
                 .toList();
     }
-
     public PropertyResponse getPropertyById(Long id) {
 
         Property property = propertyRepository.findById(id)

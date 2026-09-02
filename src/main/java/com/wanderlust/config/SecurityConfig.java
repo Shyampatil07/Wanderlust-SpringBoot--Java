@@ -102,6 +102,13 @@ public class SecurityConfig {
                         "/api/bookings/**"
                 ).authenticated()
                 
+                // Swagger
+                .requestMatchers(
+                        "/swagger-ui/**",
+                        "/swagger-ui.html",
+                        "/v3/api-docs/**"
+                ).permitAll()
+                
 
                 // Everything else requires authentication
                 .anyRequest().authenticated()

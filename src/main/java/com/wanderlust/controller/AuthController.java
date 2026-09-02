@@ -1,16 +1,24 @@
 package com.wanderlust.controller;
 
+import com.wanderlust.dto.ApiResponse;
 import com.wanderlust.dto.AuthResponse;
 import com.wanderlust.dto.LoginRequest;
 import com.wanderlust.dto.RegisterRequest;
 import com.wanderlust.service.AuthService;
+
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+@Tag(
+        name = "Authentication",
+        description = "Registration and login APIs"
+)
 @RestController
 @RequestMapping("/api/auth")
+
 public class AuthController {
 
     private final AuthService authService;
@@ -20,7 +28,7 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<AuthResponse> register(
+    public ResponseEntity<ApiResponse<AuthResponse>> register(
             @Valid @RequestBody RegisterRequest request) {
 
         AuthResponse response =
@@ -28,17 +36,25 @@ public class AuthController {
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
-                .body(response);
+                .body(new ApiResponse<>(
+                        true,
+                        "User registered successfully",
+                        response
+                ));
     }
 
     @PostMapping("/login")
-    public ResponseEntity<AuthResponse> login(
+    public ResponseEntity<ApiResponse<AuthResponse>> login(
             @Valid @RequestBody LoginRequest request) {
 
         AuthResponse response =
                 authService.login(request);
 
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(        new ApiResponse<>(
+                true,
+                "Login successful",
+                response
+        ));
     }
 }
     

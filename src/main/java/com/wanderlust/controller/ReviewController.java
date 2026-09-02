@@ -1,9 +1,12 @@
 package com.wanderlust.controller;
 
+import com.wanderlust.dto.ApiResponse;
 import com.wanderlust.dto.ReviewRequest;
 import com.wanderlust.dto.ReviewResponse;
 import com.wanderlust.service.ReviewService;
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 
 import org.springframework.http.HttpStatus;
@@ -12,8 +15,13 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@Tag(
+        name = "Reviews",
+        description = "Property review APIs"
+)
 @RestController
 @RequestMapping("/api/properties/{propertyId}/reviews")
+//@SecurityRequirement(name = "bearerAuth")
 public class ReviewController {
 
     private final ReviewService reviewService;
@@ -25,7 +33,8 @@ public class ReviewController {
     }
 
     @PostMapping
-    public ResponseEntity<ReviewResponse> createReview(
+    @SecurityRequirement(name = "bearerAuth")
+    public ResponseEntity<ApiResponse<ReviewResponse>> createReview(
             @PathVariable Long propertyId,
             @Valid @RequestBody ReviewRequest request) {
 
@@ -37,20 +46,34 @@ public class ReviewController {
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
-                .body(response);
+                .body(
+                        new ApiResponse<>(
+                                true,
+                                "Review created successfully",
+                                response
+                        )
+                );
     }
 
     @GetMapping
-    public ResponseEntity<List<ReviewResponse>> getPropertyReviews(
+    public ResponseEntity<ApiResponse<List<ReviewResponse>>> getPropertyReviews(
             @PathVariable Long propertyId) {
 
+        List<ReviewResponse> reviews =
+                reviewService.getPropertyReviews(propertyId);
+
         return ResponseEntity.ok(
-                reviewService.getPropertyReviews(propertyId)
+                new ApiResponse<>(
+                        true,
+                        "Reviews fetched successfully",
+                        reviews
+                )
         );
     }
     
     @PutMapping("/{reviewId}")
-    public ResponseEntity<ReviewResponse> updateReview(
+    @SecurityRequirement(name = "bearerAuth")
+    public ResponseEntity<ApiResponse<ReviewResponse>> updateReview(
             @PathVariable Long propertyId,
             @PathVariable Long reviewId,
             @Valid @RequestBody ReviewRequest request) {
@@ -62,10 +85,17 @@ public class ReviewController {
                         request
                 );
 
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(
+                new ApiResponse<>(
+                        true,
+                        "Review updated successfully",
+                        response
+                )
+        );
     }
     
     @DeleteMapping("/{reviewId}")
+    @SecurityRequirement(name = "bearerAuth")
     public ResponseEntity<Void> deleteReview(
             @PathVariable Long propertyId,
             @PathVariable Long reviewId) {
