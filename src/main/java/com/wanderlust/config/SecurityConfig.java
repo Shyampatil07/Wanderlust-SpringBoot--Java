@@ -12,6 +12,8 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
+import org.springframework.security.config.Customizer;
+
 @Configuration
 public class SecurityConfig {
 
@@ -29,6 +31,9 @@ public class SecurityConfig {
 
             // 1. Disable CSRF for REST API
             .csrf(csrf -> csrf.disable())
+            
+            // 1. Enable CORS with default configuration
+            .cors(Customizer.withDefaults())
 
             // 2. JWT authentication is stateless
             .sessionManagement(session ->
@@ -39,6 +44,8 @@ public class SecurityConfig {
 
             // 3. Authorization rules
             .authorizeHttpRequests(auth -> auth
+            		
+            		.requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
                 // Public authentication APIs
                 .requestMatchers(

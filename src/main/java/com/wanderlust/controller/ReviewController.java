@@ -3,6 +3,7 @@ package com.wanderlust.controller;
 import com.wanderlust.dto.ApiResponse;
 import com.wanderlust.dto.ReviewRequest;
 import com.wanderlust.dto.ReviewResponse;
+import com.wanderlust.dto.ReviewSummaryResponse;
 import com.wanderlust.service.ReviewService;
 
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -53,6 +54,23 @@ public class ReviewController {
                                 response
                         )
                 );
+    }
+    
+    @GetMapping("/summary")
+    public ResponseEntity<ApiResponse<ReviewSummaryResponse>>
+    getReviewSummary(
+            @PathVariable Long propertyId) { 
+
+        ReviewSummaryResponse summary =
+                reviewService.getReviewSummary(propertyId);
+
+        return ResponseEntity.ok(
+                new ApiResponse<>(
+                        true,
+                        "Review summary fetched successfully",
+                        summary
+                )
+        );
     }
 
     @GetMapping

@@ -97,6 +97,27 @@ public class PropertyController {
                 )
         );
     }
+    
+ // GET MY PROPERTIES
+    @GetMapping("/my")
+    @SecurityRequirement(name = "bearerAuth")
+    @Operation(
+            summary = "Get my properties",
+            description = "Fetches properties created by the authenticated user"
+    )
+    public ResponseEntity<ApiResponse<List<PropertyResponse>>> getMyProperties() {
+
+        List<PropertyResponse> properties =
+                propertyService.getMyProperties();
+
+        return ResponseEntity.ok(
+                new ApiResponse<>(
+                        true,
+                        "My properties fetched successfully",
+                        properties
+                )
+        );
+    }
 
  // GET BY ID
     @GetMapping("/{id}")

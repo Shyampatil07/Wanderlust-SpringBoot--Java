@@ -2,6 +2,7 @@ package com.wanderlust.service;
 
 import com.wanderlust.dto.ReviewRequest;
 import com.wanderlust.dto.ReviewResponse;
+import com.wanderlust.dto.ReviewSummaryResponse;
 import com.wanderlust.entity.*;
 import com.wanderlust.exception.ResourceNotFoundException;
 import com.wanderlust.repository.BookingRepository;
@@ -231,6 +232,33 @@ public class ReviewService {
         }
 
         reviewRepository.delete(review);
+    }
+    
+    public ReviewSummaryResponse getReviewSummary(
+            Long propertyId) {
+
+        if (!propertyRepository.existsById(propertyId)) {
+            throw new ResourceNotFoundException(
+                    "Property not found with id: " + propertyId
+            );
+        }
+
+        Double averageRating =
+                reviewRepository.findAverageRatingByPropertyId(
+                        propertyId
+                );
+
+        long reviewCount =
+                reviewRepository.countByPropertyId(propertyId);
+
+        if (averageRating == null) {
+            averageRating = 0.0;
+        }
+
+        return new ReviewSummaryResponse(
+                Math.round(averageRating * 10.0) / 10.0,
+                reviewCount
+        );
     }
     
 }

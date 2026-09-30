@@ -11,6 +11,8 @@ public interface BookingRepository
         extends JpaRepository<Booking, Long> {
 
     List<Booking> findByUser_Id(Long userId);
+    
+    List<Booking> findByProperty_Owner_Id(Long ownerId);
 
     List<Booking> findByPropertyIdAndStatusNotAndCheckInLessThanAndCheckOutGreaterThan(
             Long propertyId,
@@ -24,6 +26,8 @@ public interface BookingRepository
             Long propertyId,
             BookingStatus status
     );
+    
+    boolean existsByPropertyId(Long propertyId);
     
     
 }

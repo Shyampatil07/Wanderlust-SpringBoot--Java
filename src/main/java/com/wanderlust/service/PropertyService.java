@@ -19,6 +19,9 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.access.AccessDeniedException;
 
+import com.wanderlust.repository.BookingRepository;
+
+
 import java.io.IOException;
 import java.util.List;
 
@@ -28,15 +31,18 @@ public class PropertyService {
     private final PropertyRepository propertyRepository;
     private final UserRepository userRepository;
     private final CloudinaryService cloudinaryService;
+    private final BookingRepository bookingRepository;
     
     public PropertyService(
             PropertyRepository propertyRepository,
             UserRepository userRepository,
-            CloudinaryService cloudinaryService) {
+            CloudinaryService cloudinaryService,
+            BookingRepository bookingRepository) {
 
         this.propertyRepository = propertyRepository;
         this.userRepository = userRepository;
         this.cloudinaryService = cloudinaryService;
+        this.bookingRepository = bookingRepository;
     }
 
     public PropertyResponse uploadPropertyImage(
@@ -143,6 +149,18 @@ public class PropertyService {
                 .map(this::convertToResponse)
                 .toList();
     }
+    
+    public List<PropertyResponse> getMyProperties() {
+
+        User currentUser = getCurrentUser();
+
+        return propertyRepository
+                .findByOwnerId(currentUser.getId())
+                .stream()
+                .map(this::convertToResponse)
+                .toList();
+    }
+    
     public PropertyResponse getPropertyById(Long id) {
 
         Property property = propertyRepository.findById(id)
@@ -214,13 +232,20 @@ public class PropertyService {
             }
         }
 
+        // Do not delete property if bookings exist
+        if (bookingRepository.existsByPropertyId(id)) {
+
+            throw new IllegalStateException(
+                    "This property cannot be deleted because it has existing bookings."
+            );
+        }
+
         propertyRepository.delete(property);
     }
-
+    
     private PropertyResponse convertToResponse(Property property) {
 
         return new PropertyResponse(
-        		
                 property.getId(),
                 property.getTitle(),
                 property.getDescription(),
@@ -228,7 +253,9 @@ public class PropertyService {
                 property.getPricePerNight(),
                 property.getMaxGuests(),
                 property.getImageUrl(),
-                property.getOwner().getId()
+                property.getOwner().getId(),
+                property.getOwner().getName(),
+                property.getOwner().getEmail()
         );
     }
     

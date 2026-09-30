@@ -6,12 +6,29 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import com.wanderlust.dto.ApiResponse;
+
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+	
+	@ExceptionHandler(IllegalStateException.class)
+	public ResponseEntity<ApiResponse<Void>> handleIllegalStateException(
+	        IllegalStateException ex) {
+
+	    return ResponseEntity
+	            .status(HttpStatus.CONFLICT)
+	            .body(
+	                    new ApiResponse<>(
+	                            false,
+	                            ex.getMessage(),
+	                            null
+	                    )
+	            );
+	}
 
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleResourceNotFound(

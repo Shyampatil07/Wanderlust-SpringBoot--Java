@@ -14,13 +14,18 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import com.wanderlust.security.JwtService;
 import com.wanderlust.security.JwtAuthenticationFilter;
+
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.never;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.util.List;
@@ -49,21 +54,21 @@ class PropertyControllerTest {
 
         // ---------- Arrange ----------
 
-        PropertyResponse response =
-                new PropertyResponse(
-                        1L,
-                        "Pune Villa",
-                        "Beautiful villa in Pune",
-                        "Pune",
-                        5000.0,
-                        4,
-                        "image-url",
-                        10L
-                );
+//        PropertyResponse response =
+//                new PropertyResponse(
+//                        1L,
+//                        "Pune Villa",
+//                        "Beautiful villa in Pune",
+//                        "Pune",
+//                        5000.0,
+//                        4,
+//                        "image-url",
+//                        10L
+//                );
 
 
-        when(propertyService.getPropertyById(1L))
-                .thenReturn(response);
+//        when(propertyService.getPropertyById(1L))
+//                .thenReturn(response);
 
 
         // ---------- Act + Assert ----------
@@ -434,6 +439,89 @@ class PropertyControllerTest {
         verify(
                 propertyService, never()
         ).createProperty(any(PropertyRequest.class));
+    }
+    
+    @Test
+    void shouldUpdateProperty() throws Exception {
+
+        PropertyResponse response =
+                new PropertyResponse(
+                        1L,
+                        "Updated Villa",
+                        "Updated description",
+                        "Pune",
+                        6000.0,
+                        5,
+                        "image-url",
+                        10L
+                );
+
+        when(propertyService.updateProperty(
+                eq(1L),
+                any(PropertyRequest.class)
+        )).thenReturn(response);
+
+        mockMvc.perform(
+                put("/api/properties/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                            {
+                                "title": "Updated Villa",
+                                "description": "Updated description",
+                                "location": "Pune",
+                                "pricePerNight": 6000.0,
+                                "maxGuests": 5
+                            }
+                            """)
+        )
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.success").value(true))
+        .andExpect(
+                jsonPath("$.message")
+                        .value("Property updated successfully")
+        )
+        .andExpect(
+                jsonPath("$.data.title")
+                        .value("Updated Villa")
+        )
+        .andExpect(
+                jsonPath("$.data.pricePerNight")
+                        .value(6000.0)
+        );
+
+        verify(propertyService)
+                .updateProperty(
+                        eq(1L),
+                        any(PropertyRequest.class)
+                );
+    }
+    
+    @Test
+    void shouldDeleteProperty() throws Exception {
+
+        doNothing()
+                .when(propertyService)
+                .deleteProperty(1L);
+
+        mockMvc.perform(
+                delete("/api/properties/1")
+        )
+        .andExpect(status().isOk())
+        .andExpect(
+                jsonPath("$.success")
+                        .value(true)
+        )
+        .andExpect(
+                jsonPath("$.message")
+                        .value("Property deleted successfully")
+        )
+        .andExpect(
+                jsonPath("$.data")
+                        .doesNotExist()
+        );
+
+        verify(propertyService)
+                .deleteProperty(1L);
     }
     
 }

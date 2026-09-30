@@ -10,11 +10,22 @@ import lombok.Getter;
 public class PropertyResponse {
 
     private Long id;
+
     private String title;
+
     private String description;
+
     private String location;
+
     private Double pricePerNight;
+
     private Integer maxGuests;
+
     private String imageUrl;
+
     private Long ownerId;
+
+    private String ownerName;
+
+    private String ownerEmail;
 }
