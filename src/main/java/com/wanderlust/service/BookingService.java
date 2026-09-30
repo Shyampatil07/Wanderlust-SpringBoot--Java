@@ -2,6 +2,7 @@ package com.wanderlust.service;
 
 import com.wanderlust.dto.BookingRequest;
 import com.wanderlust.dto.BookingResponse;
+import com.wanderlust.dto.GuestBookingResponse;
 import com.wanderlust.entity.Booking;
 import com.wanderlust.entity.BookingStatus;
 import com.wanderlust.entity.Property;
@@ -15,6 +16,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import com.wanderlust.dto.HostBookingResponse;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -139,6 +142,32 @@ public class BookingService {
                                 "Authenticated user not found"
                         ));
     }
+    
+    private HostBookingResponse convertToHostResponse(
+            Booking booking) {
+
+        return new HostBookingResponse(
+
+                booking.getId(),
+
+                // Guest
+                booking.getUser().getId(),
+                booking.getUser().getName(),
+                booking.getUser().getEmail(),
+
+                // Property
+                booking.getProperty().getId(),
+                booking.getProperty().getTitle(),
+                booking.getProperty().getImageUrl(),
+
+                // Booking
+                booking.getCheckIn(),
+                booking.getCheckOut(),
+                booking.getGuests(),
+                booking.getTotalPrice(),
+                booking.getStatus()
+        );
+    }
 
     private BookingResponse convertToResponse(
             Booking booking) {
@@ -156,25 +185,70 @@ public class BookingService {
         );
     }
     
-    public List<BookingResponse> getMyBookings() {
+    private GuestBookingResponse convertToGuestBookingResponse(
+            Booking booking) {
 
-        Authentication authentication =
-                SecurityContextHolder
-                        .getContext()
-                        .getAuthentication();
+        Property property = booking.getProperty();
 
-        String email = authentication.getName();
+        String bookingCategory;
 
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException(
-                                "User not found"
-                        ));
+        if (booking.getStatus() == BookingStatus.CANCELLED) {
+
+            bookingCategory = "CANCELLED";
+
+        } else if (
+                booking.getCheckOut()
+                        .isAfter(LocalDate.now())
+        ) {
+
+            bookingCategory = "UPCOMING";
+
+        } else {
+
+            bookingCategory = "COMPLETED";
+        }
+
+        return new GuestBookingResponse(
+                booking.getId(),
+
+                property.getId(),
+                property.getTitle(),
+                property.getLocation(),
+                property.getImageUrl(),
+
+                booking.getCheckIn(),
+                booking.getCheckOut(),
+
+                booking.getGuests(),
+
+                booking.getTotalPrice(),
+
+                booking.getStatus(),
+
+                bookingCategory
+        );
+    }
+    
+    public List<GuestBookingResponse> getMyBookings() {
+
+        User currentUser = getCurrentUser();
+
+        List<Booking> bookings =
+                bookingRepository.findByUser_Id(currentUser.getId());
+
+        return bookings.stream()
+                .map(this::convertToGuestBookingResponse)
+                .toList();
+    }
+    
+    public List<HostBookingResponse> getHostBookings() {
+
+        User currentUser = getCurrentUser();
 
         return bookingRepository
-                .findByUser_Id(user.getId())
+                .findByProperty_Owner_Id(currentUser.getId())
                 .stream()
-                .map(this::convertToResponse)
+                .map(this::convertToHostResponse)
                 .toList();
     }
     
@@ -232,6 +306,56 @@ public class BookingService {
                 );
             }
         }
+
+        // Prevent cancelling an already cancelled booking
+        if (booking.getStatus() == BookingStatus.CANCELLED) {
+
+            throw new IllegalArgumentException(
+                    "Booking is already cancelled"
+            );
+        }
+
+        booking.setStatus(BookingStatus.CANCELLED);
+
+        Booking cancelledBooking =
+                bookingRepository.save(booking);
+
+        return convertToResponse(cancelledBooking);
+    }
+    
+    public BookingResponse hostCancelBooking(Long id) {
+
+        Booking booking = bookingRepository.findById(id)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "Booking not found with id: " + id
+                        )
+                );
+
+        User currentUser = getCurrentUser();
+
+        // ADMIN can cancel any booking
+        if (isAdmin(currentUser)) {
+
+            return cancelBookingStatus(booking);
+        }
+
+        // HOST can cancel only bookings belonging
+        // to their own property
+        if (!booking.getProperty()
+                .getOwner()
+                .getId()
+                .equals(currentUser.getId())) {
+
+            throw new AccessDeniedException(
+                    "You are not allowed to cancel this booking"
+            );
+        }
+
+        return cancelBookingStatus(booking);
+    }
+    
+    private BookingResponse cancelBookingStatus(Booking booking) {
 
         // Prevent cancelling an already cancelled booking
         if (booking.getStatus() == BookingStatus.CANCELLED) {
