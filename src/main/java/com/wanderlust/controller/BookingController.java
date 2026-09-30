@@ -3,7 +3,9 @@ package com.wanderlust.controller;
 import com.wanderlust.dto.ApiResponse;
 import com.wanderlust.dto.BookingRequest;
 import com.wanderlust.dto.BookingResponse;
+import com.wanderlust.dto.GuestBookingResponse;
 import com.wanderlust.service.BookingService;
+import com.wanderlust.dto.HostBookingResponse;
 
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -53,15 +55,31 @@ public class BookingController {
     
     @GetMapping("/my")
     @SecurityRequirement(name = "bearerAuth")
-    public ResponseEntity<ApiResponse<List<BookingResponse>>> getMyBookings() {
+    public ResponseEntity<ApiResponse<List<GuestBookingResponse>>> getMyBookings() {
 
-        List<BookingResponse> bookings =
+        List<GuestBookingResponse> bookings =
                 bookingService.getMyBookings();
 
         return ResponseEntity.ok(
                 new ApiResponse<>(
                         true,
                         "Bookings fetched successfully",
+                        bookings
+                )
+        );
+    }
+    
+    @GetMapping("/host")
+    @SecurityRequirement(name = "bearerAuth")
+    public ResponseEntity<ApiResponse<List<HostBookingResponse>>> getHostBookings() {
+
+        List<HostBookingResponse> bookings =
+                bookingService.getHostBookings();
+
+        return ResponseEntity.ok(
+                new ApiResponse<>(
+                        true,
+                        "Host bookings fetched successfully",
                         bookings
                 )
         );
@@ -96,6 +114,23 @@ public class BookingController {
                 new ApiResponse<>(
                         true,
                         "Booking cancelled successfully",
+                        response
+                )
+        );
+    }
+    
+    @PatchMapping("/{id}/host-cancel")
+    @SecurityRequirement(name = "bearerAuth")
+    public ResponseEntity<ApiResponse<BookingResponse>> hostCancelBooking(
+            @PathVariable Long id) {
+
+        BookingResponse response =
+                bookingService.hostCancelBooking(id);
+
+        return ResponseEntity.ok(
+                new ApiResponse<>(
+                        true,
+                        "Booking cancelled successfully by host",
                         response
                 )
         );
