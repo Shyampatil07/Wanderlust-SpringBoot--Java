@@ -1,4 +1,4 @@
-package com.wanderlust.dto;
+	package com.wanderlust.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
