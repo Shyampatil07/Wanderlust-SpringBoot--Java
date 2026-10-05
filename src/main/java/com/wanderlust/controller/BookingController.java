@@ -136,4 +136,20 @@ public class BookingController {
         );
     }
     
+    @DeleteMapping("/{id}")
+    @SecurityRequirement(name = "bearerAuth")
+    public ResponseEntity<ApiResponse<Void>> deleteBooking(
+            @PathVariable Long id) {
+
+        bookingService.deleteBooking(id);
+
+        return ResponseEntity.ok(
+                new ApiResponse<>(
+                        true,
+                        "Booking deleted successfully",
+                        null
+                )
+        );
+    }
+    
 }
