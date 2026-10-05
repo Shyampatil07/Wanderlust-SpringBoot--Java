@@ -11,4 +11,6 @@ public interface PropertyRepository
                 JpaSpecificationExecutor<Property> {
 
     List<Property> findByOwnerId(Long ownerId);
+    
+    long countByOwnerId(Long ownerId);
 }
