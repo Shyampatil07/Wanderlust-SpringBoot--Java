@@ -373,4 +373,45 @@ public class BookingService {
         return convertToResponse(cancelledBooking);
     }
     
+    public void deleteBooking(Long id) {
+
+        Booking booking = bookingRepository.findById(id)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "Booking not found with id: " + id
+                        )
+                );
+
+        User currentUser = getCurrentUser();
+
+        // ADMIN can delete any booking
+        if (isAdmin(currentUser)) {
+            bookingRepository.delete(booking);
+            return;
+        }
+
+        // HOST can delete bookings for their own property
+        if (booking.getProperty()
+                .getOwner()
+                .getId()
+                .equals(currentUser.getId())) {
+
+            bookingRepository.delete(booking);
+            return;
+        }
+
+        // USER can delete only their own booking
+        if (booking.getUser()
+                .getId()
+                .equals(currentUser.getId())) {
+
+            bookingRepository.delete(booking);
+            return;
+        }
+
+        throw new AccessDeniedException(
+                "You are not allowed to delete this booking"
+        );
+    }
+    
 }
