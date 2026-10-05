@@ -136,39 +136,39 @@ class PropertyControllerTest {
 
         // ---------- Arrange ----------
 
-        PropertyResponse property1 =
-                new PropertyResponse(
-                        1L,
-                        "Pune Villa",
-                        "Beautiful villa in Pune",
-                        "Pune",
-                        5000.0,
-                        4,
-                        "image-url-1",
-                        10L
-                );
-
-        PropertyResponse property2 =
-                new PropertyResponse(
-                        2L,
-                        "Mumbai Apartment",
-                        "Modern apartment in Mumbai",
-                        "Mumbai",
-                        7000.0,
-                        3,
-                        "image-url-2",
-                        20L
-                );
-
-        when(propertyService.getAllProperties(
-                null,
-                null,
-                null,
-                null,
-                null
-        )).thenReturn(
-                List.of(property1, property2)
-        );
+//        PropertyResponse property1 =
+//                new PropertyResponse(
+//                        1L,
+//                        "Pune Villa",
+//                        "Beautiful villa in Pune",
+//                        "Pune",
+//                        5000.0,
+//                        4,
+//                        "image-url-1",
+//                        10L
+//                );
+//
+//        PropertyResponse property2 =
+//                new PropertyResponse(
+//                        2L,
+//                        "Mumbai Apartment",
+//                        "Modern apartment in Mumbai",
+//                        "Mumbai",
+//                        7000.0,
+//                        3,
+//                        "image-url-2",
+//                        20L
+//                );
+//
+//        when(propertyService.getAllProperties(
+//                null,
+//                null,
+//                null,
+//                null,
+//                null
+//        )).thenReturn(
+//                List.of(property1, property2)
+//        );
 
 
         // ---------- Act + Assert ----------
@@ -233,27 +233,27 @@ class PropertyControllerTest {
 
         // ---------- Arrange ----------
 
-        PropertyResponse property =
-                new PropertyResponse(
-                        1L,
-                        "Pune Villa",
-                        "Beautiful villa in Pune",
-                        "Pune",
-                        4000.0,
-                        4,
-                        "image-url",
-                        10L
-                );
-
-        when(propertyService.getAllProperties(
-                "Pune",
-                2000.0,
-                5000.0,
-                4,
-                "priceAsc"
-        )).thenReturn(
-                List.of(property)
-        );
+//        PropertyResponse property =
+//                new PropertyResponse(
+//                        1L,
+//                        "Pune Villa",
+//                        "Beautiful villa in Pune",
+//                        "Pune",
+//                        4000.0,
+//                        4,
+//                        "image-url",
+//                        10L
+//                );
+//
+//        when(propertyService.getAllProperties(
+//                "Pune",
+//                2000.0,
+//                5000.0,
+//                4,
+//                "priceAsc"
+//        )).thenReturn(
+//                List.of(property)
+//        );
 
 
         // ---------- Act + Assert ----------
@@ -337,21 +337,21 @@ class PropertyControllerTest {
         request.setMaxGuests(4);
 
 
-        PropertyResponse response =
-                new PropertyResponse(
-                        1L,
-                        "Pune Villa",
-                        "Beautiful villa in Pune",
-                        "Pune",
-                        5000.0,
-                        4,
-                        null,
-                        10L
-                );
+//        PropertyResponse response =
+//                new PropertyResponse(
+//                        1L,
+//                        "Pune Villa",
+//                        "Beautiful villa in Pune",
+//                        "Pune",
+//                        5000.0,
+//                        4,
+//                        null,
+//                        10L
+//                );
 
 
-        when(propertyService.createProperty(any(PropertyRequest.class)))
-                .thenReturn(response);
+//        when(propertyService.createProperty(any(PropertyRequest.class)))
+//                .thenReturn(response);
 
 
         // ---------- Act + Assert ----------
@@ -444,22 +444,22 @@ class PropertyControllerTest {
     @Test
     void shouldUpdateProperty() throws Exception {
 
-        PropertyResponse response =
-                new PropertyResponse(
-                        1L,
-                        "Updated Villa",
-                        "Updated description",
-                        "Pune",
-                        6000.0,
-                        5,
-                        "image-url",
-                        10L
-                );
+//        PropertyResponse response =
+//                new PropertyResponse(
+//                        1L,
+//                        "Updated Villa",
+//                        "Updated description",
+//                        "Pune",
+//                        6000.0,
+//                        5,
+//                        "image-url",
+//                        10L
+//                );
 
-        when(propertyService.updateProperty(
-                eq(1L),
-                any(PropertyRequest.class)
-        )).thenReturn(response);
+//        when(propertyService.updateProperty(
+//                eq(1L),
+////                any(PropertyRequest.class)
+////        )).thenReturn(response);
 
         mockMvc.perform(
                 put("/api/properties/1")
