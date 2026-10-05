@@ -46,6 +46,7 @@ public class AuthService {
         );
 
         user.setPhone(request.getPhone());
+        user.setAbout(request.getAbout());
 
         // Every public registration starts as USER
         user.setRole(Role.USER);
