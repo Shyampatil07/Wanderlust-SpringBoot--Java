@@ -198,4 +198,50 @@ public class PropertyController {
         );
     }
     
+ // MULTIPLE IMAGE UPLOAD
+    @PostMapping(
+            value = "/{id}/images",
+            consumes = "multipart/form-data"
+    )
+    @SecurityRequirement(name = "bearerAuth")
+    public ResponseEntity<ApiResponse<PropertyResponse>> uploadImages(
+            @PathVariable Long id,
+            @RequestParam("files") List<MultipartFile> files)
+            throws IOException {
+
+        PropertyResponse response =
+                propertyService.uploadPropertyImages(
+                        id,
+                        files
+                );
+
+        return ResponseEntity.ok(
+                new ApiResponse<>(
+                        true,
+                        "Images uploaded successfully",
+                        response
+                )
+        );
+    }
+    
+    @DeleteMapping("/{propertyId}/images/{imageId}")
+    @SecurityRequirement(name = "bearerAuth")
+    public ResponseEntity<ApiResponse<Void>> deletePropertyImage(
+            @PathVariable Long propertyId,
+            @PathVariable Long imageId) {
+
+        propertyService.deletePropertyImage(
+                propertyId,
+                imageId
+        );
+
+        return ResponseEntity.ok(
+                new ApiResponse<>(
+                        true,
+                        "Property image deleted successfully",
+                        null
+                )
+        );
+    }
+    
 }
