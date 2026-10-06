@@ -1,7 +1,12 @@
 package com.wanderlust.entity;
 
+import org.hibernate.annotations.CreationTimestamp;
+
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
+import java.time.LocalDateTime;
+
 
 @Entity
 @Table(name = "users")
@@ -29,4 +34,16 @@ public class User {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Role role;
+    
+    private String profileImageUrl;
+
+    @Column(length = 1000)
+    private String about;
+
+    @CreationTimestamp
+    @Column(updatable = false)
+    private LocalDateTime createdAt;
+    
+   
+    
 }
