@@ -1,8 +1,10 @@
-package com.wanderlust.service;
+	package com.wanderlust.service;
 
+import com.wanderlust.dto.PropertyImageResponse;
 import com.wanderlust.dto.PropertyRequest;
 import com.wanderlust.dto.PropertyResponse;
 import com.wanderlust.entity.Property;
+import com.wanderlust.entity.PropertyImage;
 import com.wanderlust.entity.User;
 import com.wanderlust.exception.ResourceNotFoundException;
 import com.wanderlust.repository.PropertyRepository;
@@ -20,7 +22,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.access.AccessDeniedException;
 
 import com.wanderlust.repository.BookingRepository;
-
+import com.wanderlust.repository.PropertyImageRepository;
 
 import java.io.IOException;
 import java.util.List;
@@ -32,17 +34,20 @@ public class PropertyService {
     private final UserRepository userRepository;
     private final CloudinaryService cloudinaryService;
     private final BookingRepository bookingRepository;
+    private final PropertyImageRepository propertyImageRepository;
     
     public PropertyService(
             PropertyRepository propertyRepository,
             UserRepository userRepository,
             CloudinaryService cloudinaryService,
-            BookingRepository bookingRepository) {
+            BookingRepository bookingRepository,
+            PropertyImageRepository propertyImageRepository) {
 
         this.propertyRepository = propertyRepository;
         this.userRepository = userRepository;
         this.cloudinaryService = cloudinaryService;
         this.bookingRepository = bookingRepository;
+        this.propertyImageRepository = propertyImageRepository;
     }
 
     public PropertyResponse uploadPropertyImage(
@@ -92,6 +97,71 @@ public class PropertyService {
                 propertyRepository.save(property);
 
         return convertToResponse(savedProperty);
+    }
+    
+    public PropertyResponse uploadPropertyImages(
+            Long propertyId,
+            List<MultipartFile> files) throws IOException {
+
+        Property property =
+                propertyRepository.findById(propertyId)
+                        .orElseThrow(() ->
+                                new ResourceNotFoundException(
+                                        "Property not found with id: "
+                                                + propertyId
+                                ));
+
+        User currentUser = getCurrentUser();
+
+        boolean isAdmin =
+                currentUser.getRole() != null
+                        && currentUser.getRole()
+                        .name()
+                        .equals("ADMIN");
+
+        boolean isOwner =
+                property.getOwner().getId()
+                        .equals(currentUser.getId());
+
+        if (!isOwner && !isAdmin) {
+            throw new AccessDeniedException(
+                    "You are not allowed to update this property"
+            );
+        }
+
+        if (files == null || files.isEmpty()) {
+            throw new IllegalArgumentException(
+                    "At least one image is required"
+            );
+        }
+
+        for (MultipartFile file : files) {
+
+            if (file == null || file.isEmpty()) {
+                continue;
+            }
+
+            if (file.getContentType() == null ||
+                    !file.getContentType().startsWith("image/")) {
+
+                throw new IllegalArgumentException(
+                        "Only image files are allowed"
+                );
+            }
+
+            String imageUrl =
+                    cloudinaryService.uploadImage(file);
+
+            PropertyImage propertyImage =
+                    new PropertyImage();
+
+            propertyImage.setImageUrl(imageUrl);
+            propertyImage.setProperty(property);
+
+            propertyImageRepository.save(propertyImage);
+        }
+
+        return convertToResponse(property);
     }
 
     public PropertyResponse createProperty(PropertyRequest request) {
@@ -243,20 +313,34 @@ public class PropertyService {
         propertyRepository.delete(property);
     }
     
-    private PropertyResponse convertToResponse(Property property) {
+    public PropertyResponse convertToResponse(Property property) {
 
-        return new PropertyResponse(
-                property.getId(),
-                property.getTitle(),
-                property.getDescription(),
-                property.getLocation(),
-                property.getPricePerNight(),
-                property.getMaxGuests(),
-                property.getImageUrl(),
-                property.getOwner().getId(),
-                property.getOwner().getName(),
-                property.getOwner().getEmail()
-        );
+    	List<PropertyImageResponse> images =
+    	        property.getImages() == null
+    	                ? List.of()
+    	                : property.getImages()
+    	                        .stream()
+    	                        .map(image ->
+    	                                new PropertyImageResponse(
+    	                                        image.getId(),
+    	                                        image.getImageUrl()
+    	                                )
+    	                        )
+    	                        .toList();
+
+    	return new PropertyResponse(
+    	        property.getId(),
+    	        property.getTitle(),
+    	        property.getDescription(),
+    	        property.getLocation(),
+    	        property.getPricePerNight(),
+    	        property.getMaxGuests(),
+    	        property.getImageUrl(),
+    	        images,
+    	        property.getOwner().getId(),
+    	        property.getOwner().getName(),
+    	        property.getOwner().getEmail()
+    	);
     }
     
     private User getCurrentUser() {
@@ -280,4 +364,53 @@ public class PropertyService {
         return user.getRole() != null
                 && user.getRole().name().equals("ADMIN");
     }
+    
+    public void deletePropertyImage(Long propertyId, Long imageId) {
+
+        Property property =
+                propertyRepository.findById(propertyId)
+                        .orElseThrow(() ->
+                                new ResourceNotFoundException(
+                                        "Property not found with id: " + propertyId
+                                ));
+
+        User currentUser = getCurrentUser();
+
+        boolean isAdmin =
+                currentUser.getRole() != null
+                        && currentUser.getRole()
+                        .name()
+                        .equals("ADMIN");
+
+        boolean isOwner =
+                property.getOwner()
+                        .getId()
+                        .equals(currentUser.getId());
+
+        if (!isOwner && !isAdmin) {
+            throw new AccessDeniedException(
+                    "You are not allowed to update this property"
+            );
+        }
+
+        PropertyImage image =
+                propertyImageRepository.findById(imageId)
+                        .orElseThrow(() ->
+                                new ResourceNotFoundException(
+                                        "Property image not found with id: "
+                                                + imageId
+                                ));
+
+        if (!image.getProperty()
+                .getId()
+                .equals(propertyId)) {
+
+            throw new AccessDeniedException(
+                    "This image does not belong to this property"
+            );
+        }
+
+        propertyImageRepository.delete(image);
+    }
+    
 }
